@@ -523,6 +523,43 @@ header.top{background:rgba(200,220,244,.85);backdrop-filter:blur(8px);-webkit-ba
 .dk.rev>span{white-space:nowrap;text-align:left}
 .dk.rev svg{flex:none}
 @media (max-width:380px){.dockin{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}.dk b{font-size:19px}}
+/* ---- sân khấu hoạt hình ---- */
+.stage{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:16/10;max-height:300px;width:100%;background:#dfeafc;box-shadow:0 6px 18px rgba(60,80,140,.15);margin:6px 0 12px}
+.stage .scn{position:absolute;inset:0;width:100%;height:100%}
+.actor{position:absolute;bottom:0;width:38%;max-width:180px;transition:filter .2s,transform .2s;transform-origin:bottom center}
+.actor.L{left:6%}.actor.R{right:6%}
+.actor svg{width:100%;height:auto;display:block}
+.actor .nm{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);background:rgba(255,255,255,.9);border-radius:99px;padding:1px 10px;font-size:12px;font-weight:800;color:#2b3350;white-space:nowrap}
+.actor .mo-o{transform-box:fill-box;transform-origin:center;transform:scaleY(0);opacity:0}
+.actor.talking .mo-o{opacity:1;animation:flap .18s infinite alternate ease-in-out}
+.actor.talking .mo-c{opacity:0}
+.actor.talking{animation:bob .45s infinite alternate ease-in-out}
+.actor.dim2{filter:saturate(.75) brightness(.97)}
+.actor .eyes{transform-box:fill-box;transform-origin:center;animation:blink 4.2s infinite}
+.actor.R .eyes{animation-delay:1.7s}
+@keyframes flap{from{transform:scaleY(.25)}to{transform:scaleY(1.15)}}
+@keyframes bob{from{transform:translateY(0) rotate(0)}to{transform:translateY(-4px) rotate(-1deg)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.subt{position:absolute;left:8%;right:8%;top:10px;background:rgba(20,26,50,.72);color:#fff;border-radius:14px;padding:8px 12px;text-align:center;min-height:20px;transition:opacity .2s}
+.subt b{display:block;font-size:16px;line-height:1.3}.subt small{display:block;color:#ffd9b8;font-size:13px;margin-top:2px}
+.subt.novi small{display:none}
+.subt.off{opacity:0}
+.subt b:empty{display:none}
+.sctl{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;opacity:.96}
+.stage:has(.sctl) .actor{bottom:38px}
+.sbtn{background:rgba(255,255,255,.95);border-radius:99px;padding:6px 12px;font-weight:800;font-size:13px;color:#2b3350;min-height:34px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.sbtn.on{background:#ff7a1a;color:#fff}
+#tStage{padding:8px 14px 0;max-width:680px;width:100%;margin:0 auto}
+#tStage .stage{max-height:210px;margin:0}
+@media (prefers-reduced-motion:reduce){.actor.talking,.actor .eyes{animation:none}.actor.talking .mo-o{animation:none;transform:scaleY(.8)}}
+.stagew{margin:6px 0 12px}
+.stagew .stage{margin:0}
+.subt{top:auto;bottom:10px;left:6%;right:6%;padding:6px 10px}
+.subt b{font-size:15px}
+.sctl{position:static;margin-top:10px}
+.stage:has(.sctl) .actor{bottom:0}
+.sbtn{background:#fff;border:2px solid var(--line)}
+#tStage .stagew{margin:0}
 
 </style>
 </head>
@@ -656,6 +693,7 @@ header.top{background:rgba(200,220,244,.85);backdrop-filter:blur(8px);-webkit-ba
 
 <div id="talk" role="dialog" aria-modal="true" aria-labelledby="tTitle">
  <div class="thead"><button class="x" id="tQuit" aria-label="Thoát">×</button><div class="ttl"><b id="tTitle"></b><small id="tSub"></small></div><span style="width:44px"></span></div>
+ <div id="tStage"></div>
  <div class="tbody" id="tBody"></div>
  <div class="tfoot" id="tFoot"><div class="hints" id="tHints"></div><div class="comp"><button class="hbtn" id="tHint" type="button">Gợi ý</button><input id="tIn" placeholder="Nói hoặc gõ tiếng Anh…" autocomplete="off" aria-label="Câu trả lời"><button class="mic" id="tMic" type="button" aria-label="Nói"><svg><use href="#i-mic"/></svg></button><button class="send" id="tSend" type="button" aria-label="Gửi"><svg><use href="#i-send"/></svg></button></div></div>
 </div>
@@ -1240,6 +1278,35 @@ const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(
 const pick=(a,n)=>shuf(a).slice(0,n);
 const day=(o=0)=>new Date(Date.now()+o*864e5).toLocaleDateString('en-CA');
 const SPK='<svg><use href="#i-spk"/></svg>',SLOW='<svg><use href="#i-slow"/></svg>',MIC='<svg><use href="#i-mic"/></svg>';
+/* ---- SÂN KHẤU HOẠT HÌNH: nhân vật mấp máy miệng theo giọng đọc ---- */
+const FEM=/^(lan|anna|mai|linh|sophie|sarah|helen|bà|lễ tân|phục vụ|cô|chị|vy|người bán)/i;
+const SCN={greet:'park',cafe:'cafe',social:'cafe',shop:'shop',problem:'shop',way:'street',time:'street',daily:'home',media:'home',work:'office',career:'office',debate:'office',nuance:'office',formal:'office',academic:'office',health:'clinic',travel:'hotel',opinion:'park',env:'park',qa:'class'};
+function sceneSVG(k){const g='<rect width="400" height="230" fill="#dfeafc"/>';const fl=(c)=>`<rect y="170" width="400" height="60" fill="${c}"/>`;
+ const S={
+ park:`<rect width="400" height="230" fill="#cfe7ff"/><circle cx="330" cy="50" r="24" fill="#fff3b0"/><path d="M0 150 Q100 110 200 140 T400 130 V230 H0Z" fill="#a8dcb0"/><g fill="#6fbf86"><circle cx="60" cy="110" r="34"/><circle cx="350" cy="105" r="30"/></g><rect x="56" y="130" width="8" height="40" fill="#8a5a2b"/><rect x="346" y="125" width="8" height="40" fill="#8a5a2b"/><rect y="180" width="400" height="50" fill="#93cf9d"/><rect x="150" y="160" width="100" height="10" rx="3" fill="#b07a4a"/>`,
+ cafe:`${g}<rect width="400" height="170" fill="#f6e3cf"/><rect x="30" y="30" width="110" height="70" rx="6" fill="#fff" opacity=".7"/><rect x="260" y="30" width="110" height="70" rx="6" fill="#fff" opacity=".7"/><path d="M180 20h40v40h-40z" fill="#c98b5a"/><text x="200" y="47" font-size="14" text-anchor="middle" fill="#fff" font-family="Nunito" font-weight="900">CAFÉ</text>${fl('#c99a6e')}<rect x="150" y="150" width="100" height="10" rx="4" fill="#8a5a2b"/><rect x="185" y="132" width="14" height="18" rx="3" fill="#fff"/><rect x="205" y="134" width="12" height="16" rx="3" fill="#fff"/>`,
+ shop:`${g}<rect width="400" height="170" fill="#fde9ee"/><g fill="#fff"><rect x="20" y="40" width="80" height="110"/><rect x="300" y="40" width="80" height="110"/></g><g fill="#f4a05a"><rect x="30" y="55" width="25" height="30"/><rect x="62" y="55" width="25" height="30"/><rect x="310" y="95" width="25" height="30"/></g><g fill="#8e86f5"><rect x="30" y="100" width="25" height="30"/><rect x="342" y="55" width="25" height="30"/></g><path d="M130 20h140l-10 30H140z" fill="#f07a7a"/>${fl('#e8c9b4')}<rect x="150" y="145" width="100" height="25" fill="#fff"/>`,
+ street:`<rect width="400" height="230" fill="#cfe2ff"/><g fill="#b4c4ee"><rect x="10" y="50" width="70" height="120"/><rect x="90" y="80" width="60" height="90"/><rect x="250" y="60" width="60" height="110"/><rect x="320" y="30" width="70" height="140"/></g><g fill="#dfe8fa"><rect x="22" y="65" width="14" height="14"/><rect x="50" y="65" width="14" height="14"/><rect x="22" y="95" width="14" height="14"/><rect x="335" y="50" width="14" height="14"/><rect x="362" y="50" width="14" height="14"/><rect x="335" y="85" width="14" height="14"/></g><rect y="170" width="400" height="60" fill="#9aa6c2"/><g fill="#fff"><rect x="20" y="196" width="40" height="6"/><rect x="100" y="196" width="40" height="6"/><rect x="260" y="196" width="40" height="6"/><rect x="340" y="196" width="40" height="6"/></g><rect x="190" y="80" width="6" height="90" fill="#5b6484"/><rect x="180" y="60" width="26" height="30" rx="5" fill="#2b3350"/><circle cx="193" cy="69" r="4" fill="#5fd39a"/>`,
+ home:`${g}<rect width="400" height="170" fill="#e8f0ff"/><rect x="40" y="35" width="100" height="70" fill="#bfe0ff" stroke="#fff" stroke-width="6"/><rect x="270" y="40" width="70" height="50" fill="#f4a05a" opacity=".6"/>${fl('#d9c4a8')}<rect x="250" y="120" width="130" height="45" rx="12" fill="#8e86f5"/><rect x="250" y="110" width="130" height="18" rx="9" fill="#a79ff7"/>`,
+ office:`${g}<rect width="400" height="170" fill="#eef2f8"/><rect x="20" y="30" width="360" height="80" rx="4" fill="#dbe5f3"/><g stroke="#c4d1e6" stroke-width="3"><path d="M110 30v80M200 30v80M290 30v80"/></g><circle cx="340" cy="135" r="16" fill="#6fbf86"/><rect x="334" y="148" width="12" height="20" fill="#c98b5a"/>${fl('#b9c3d6')}<rect x="130" y="140" width="140" height="12" rx="4" fill="#5b6484"/><rect x="175" y="112" width="50" height="30" rx="3" fill="#2b3350"/>`,
+ clinic:`${g}<rect width="400" height="170" fill="#e9f7f4"/><g transform="translate(180 30)"><rect width="40" height="40" rx="8" fill="#fff"/><path d="M20 8v24M8 20h24" stroke="#f07a7a" stroke-width="7" stroke-linecap="round"/></g><rect x="30" y="60" width="90" height="60" rx="6" fill="#fff" opacity=".8"/>${fl('#bfe3db')}<rect x="270" y="125" width="110" height="20" rx="8" fill="#fff"/><rect x="275" y="145" width="8" height="25" fill="#9aa6c2"/><rect x="367" y="145" width="8" height="25" fill="#9aa6c2"/>`,
+ hotel:`${g}<rect width="400" height="170" fill="#fff3e0"/><circle cx="200" cy="40" r="22" fill="#ffd27a"/><g stroke="#e3b46a" stroke-width="2"><path d="M200 62v20"/></g><rect x="20" y="40" width="70" height="110" rx="35" fill="#fff" opacity=".7"/><rect x="310" y="40" width="70" height="110" rx="35" fill="#fff" opacity=".7"/>${fl('#e7cfa6')}<rect x="130" y="140" width="140" height="30" rx="4" fill="#b07a4a"/><text x="200" y="160" font-size="11" text-anchor="middle" fill="#fff" font-family="Nunito" font-weight="900">RECEPTION</text>`,
+ class:`${g}<rect width="400" height="170" fill="#eaf4e6"/><rect x="90" y="25" width="220" height="95" rx="6" fill="#3f6b55"/><text x="200" y="70" font-size="20" text-anchor="middle" fill="#fff" font-family="Nunito" font-weight="900">Speak up!</text><text x="200" y="95" font-size="12" text-anchor="middle" fill="#cfe9d8" font-family="Nunito">ask · answer · improve</text>${fl('#d8c3a0')}`};
+ return `<svg class="scn" viewBox="0 0 400 230" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${S[k]||S.park}</svg>`}
+const SKIN=['#f8d3b0','#f1c095','#e2a87c','#c98d62'],HAIR=['#2b2118','#5a3a22','#8a5a2b','#1d1d2b'],SHIRT=['#6ec1f7','#f07a7a','#5fd39a','#c58af0','#f4a05a','#4fc3c9'];
+function hashN(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h}
+function actorSVG(name,side){const me=name==='Bạn'||name==='You',f=!me&&FEM.test(name),h=hashN(name),sk=SKIN[h%4],hr=HAIR[(h>>3)%4],sh=me?'#ff7a1a':SHIRT[(h>>5)%6],flip=side==='R'?'transform="translate(160 0) scale(-1 1)"':'';
+ const hair=f?`<path d="M42 70c0-30 18-46 38-46s38 16 38 46c0 22-6 40-8 50l-10-34H60l-10 34c-2-10-8-28-8-50z" fill="${hr}"/>`:me?`<path d="M44 66c0-26 16-42 36-42s36 16 36 42c-10-12-22-16-36-16s-26 4-36 16z" fill="${hr}"/><path d="M40 72c-2-40 24-56 40-56s42 16 40 56" fill="none" stroke="#ff7a1a" stroke-width="8" opacity=".9"/>`:`<path d="M44 64c0-26 16-40 36-40s36 14 36 40c-6-10-16-16-36-16s-30 6-36 16z" fill="${hr}"/>`;
+ return `<svg viewBox="0 0 160 200" aria-hidden="true"><g ${flip}><path d="M30 200c0-44 22-64 50-64s50 20 50 64z" fill="${sh}"/><path d="M66 136l14 16 14-16" fill="#fff" opacity=".85"/>${f?`<path d="M44 74c0 22-2 44-8 56h20z" fill="${hr}"/><path d="M116 74c0 22 2 44 8 56h-20z" fill="${hr}"/>`:''}<rect x="70" y="112" width="20" height="26" rx="8" fill="${sk}"/><ellipse cx="80" cy="76" rx="34" ry="38" fill="${sk}"/>${hair}<g class="eyes"><ellipse cx="68" cy="78" rx="4" ry="5" fill="#2b2118"/><ellipse cx="92" cy="78" rx="4" ry="5" fill="#2b2118"/></g><path d="M61 68q7-4 14 0M85 68q7-4 14 0" stroke="${hr}" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="60" cy="92" r="5" fill="#ff8fa0" opacity=".45"/><circle cx="100" cy="92" r="5" fill="#ff8fa0" opacity=".45"/><path class="mo-c" d="M72 98q8 6 16 0" stroke="#8a3b2a" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse class="mo-o" cx="80" cy="99" rx="8" ry="6" fill="#8a3b2a"/></g></svg>`}
+function stageHTML(u,opt={}){const d=u.d,sc=SCN[u.id]||(u.qa?'class':'park');
+ return `<div class="stagew"><div class="stage" data-s="${sc}">${sceneSVG(sc)}<div class="actor L" data-i="0">${actorSVG(d.s[0],'L')}<span class="nm">${esc(d.s[0])}</span></div><div class="actor R" data-i="1">${actorSVG(d.s[1],'R')}<span class="nm">${esc(d.s[1])}</span></div><div class="subt ${opt.cc?'':'off'}"><b></b><small></small></div></div>${opt.ctrl?'<div class="sctl"><button class="sbtn" data-a="play">▶ Phát</button><button class="sbtn" data-a="slow">Chậm</button><button class="sbtn" data-a="cc">Phụ đề: '+(opt.cc?'Bật':'Tắt')+'</button><button class="sbtn" data-a="vi">Tiếng Việt</button></div>':''}</div>`}
+function stageSay(st,i,en,vi){if(!st)return;st.querySelectorAll('.actor').forEach(a=>a.classList.toggle('talking',+a.dataset.i===i));st.querySelectorAll('.actor').forEach(a=>a.classList.toggle('dim2',+a.dataset.i!==i));const s=st.querySelector('.subt');if(s){s.querySelector('b').textContent=en||'';s.querySelector('small').textContent=vi||''}}
+function stageIdle(st){if(!st)return;st.querySelectorAll('.actor').forEach(a=>a.classList.remove('talking','dim2'))}
+function bindStage(st,u,box){if(!st)return;st.querySelectorAll('.sbtn').forEach(b=>b.onclick=()=>{const a=b.dataset.a,s=st.querySelector('.subt');
+ if(a==='play'){if(st.classList.contains('playing')){hush();st.classList.remove('playing');b.textContent='▶ Phát';stageIdle(st);return}playDialog(u,0,box,st)}
+ else if(a==='slow')playDialog(u,.7,box,st);
+ else if(a==='cc'){s.classList.toggle('off');b.textContent='Phụ đề: '+(s.classList.contains('off')?'Tắt':'Bật')}
+ else if(a==='vi'){s.classList.toggle('novi');b.classList.toggle('on',!s.classList.contains('novi'))}})}
 
 const LVS=[
 {id:'A1',n:'Sơ cấp',w:'500–1.000 từ',d:'Giao tiếp đơn giản hằng ngày'},
@@ -1447,13 +1514,15 @@ function end(out){const acc=L.tot?Math.round(L.ok/L.tot*100):100,st=out?0:acc>=9
  if(!out&&L.onEnd)L.onEnd(st,acc);foot('',out?'Làm lại':'Tiếp tục',true)}
 function listenBtns(t){return `<div class="listen"><button class="lbtn" data-play="${esc(t)}" aria-label="Nghe">${SPK}</button><button class="lbtn slow" data-slow="${esc(t)}" aria-label="Nghe chậm">${SLOW}</button></div>`}
 function bindPlay(b){b.querySelectorAll('[data-play]').forEach(x=>x.onclick=()=>say(x.dataset.play));b.querySelectorAll('[data-slow]').forEach(x=>x.onclick=()=>say(x.dataset.slow,.6));b.querySelectorAll('[data-say]').forEach(x=>x.onclick=()=>say(x.dataset.say))}
-async function playDialog(u,rate,box){const tk=++playTok,d=u.d;for(let i=0;i<d.l.length;i++){if(tk!==playTok)break;box&&box.querySelectorAll('p').forEach((p,j)=>p.classList.toggle('now',j===i));await say(d.l[i][1],rate||(S.slow?.75:.92),d.l[i][0]?.9:1.08)}box&&box.querySelectorAll('p').forEach(p=>p.classList.remove('now'))}
+async function playDialog(u,rate,box,st){const tk=++playTok,d=u.d;const pb=st&&st.querySelector('[data-a=play]');if(st){st.classList.add('playing');if(pb)pb.textContent='❚❚ Dừng'}
+ for(let i=0;i<d.l.length;i++){if(tk!==playTok)break;box&&box.querySelectorAll('p').forEach((p,j)=>p.classList.toggle('now',j===i));stageSay(st,d.l[i][0],d.l[i][1],d.l[i][2]);await say(d.l[i][1],rate||(S.slow?.75:.92),d.l[i][0]?.9:1.08);if(tk===playTok&&st){stageIdle(st);await new Promise(r=>setTimeout(r,250))}}
+ box&&box.querySelectorAll('p').forEach(p=>p.classList.remove('now'));if(tk===playTok&&st){stageIdle(st);st.classList.remove('playing');if(pb)pb.textContent='▶ Xem lại'}}
 const R={
 learn(q,b){const w=q.w,ex=w[3]?[w[3],w[4]]:(S.ex&&S.ex[q.wk]);const exH=e=>`<div class="exh"><b>${esc(e[0])}</b><button class="spk" data-say="${esc(e[0])}" aria-label="Nghe câu">${SPK}</button></div><span class="sub">${esc(e[1])}</span>`;
  b.innerHTML=`<div class="learn"><span class="tag">Từ mới</span>${w[5]?`<div><span class="posb">${POS[w[5]]||w[5]}</span></div>`:''}<div class="h en">${esc(w[0])}</div><div class="p">${esc(w[1])}</div><div class="m">${esc(w[2])}</div>${listenBtns(w[0])}${ex||AI?`<div class="ex" id="lex">${ex?exH(ex):'<button class="lnk" id="mkEx">Tạo câu ví dụ bằng AI</button>'}</div>`:''}</div>`;bindPlay(b);
  const mk=$('#mkEx');if(mk)mk.onclick=async()=>{mk.disabled=true;mk.textContent='Đang tạo câu ví dụ…';try{const r=await askJSON(`Write one natural, everyday English example sentence (max 14 words) using "${w[0]}" (${POS[w[5]]||''}, meaning "${w[2]}") for a CEFR ${S.lv} learner. Return JSON only: {"en":"sentence","vi":"Vietnamese translation"}`);if(!r.en)throw{};S.ex=S.ex||{};S.ex[q.wk]=[String(r.en),String(r.vi||'')];save();const box=$('#lex');if(box){box.innerHTML=exH(S.ex[q.wk]);bindPlay(box);say(r.en)}}catch(e){toast(aiErr(e));mk.disabled=false;mk.textContent='Tạo câu ví dụ bằng AI'}};foot('','Tiếp tục',true);if(!S.w[q.wk]){S.w[q.wk]={b:1,d:day(1)};save()}say(w[0])},
-mc(q,b){const short=q.opts.every(o=>o.length<=22);b.innerHTML=`<p class="tagl">${esc(q.tag)}</p>${q.listen?listenBtns(q.listen):''}${q.replay?`<button class="replay" id="rp">${SPK}Nghe lại hội thoại</button>`:''}${q.q?`<div class="q">${q.q}</div>`:''}${q.sub?`<p class="sub">${esc(q.sub)}</p>`:''}${q.auto?`<button class="replay" data-say="${esc(q.auto)}">${SPK}Nghe</button>`:''}<div class="opts ${short?'g2':''}">${q.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}</div>`;
- bindPlay(b);if(q.replay){const u=allU().find(x=>x.id===q.replay);$('#rp').onclick=()=>playDialog(u)}
+mc(q,b){const short=q.opts.every(o=>o.length<=22);b.innerHTML=`<p class="tagl">${esc(q.tag)}</p>${q.listen?listenBtns(q.listen):''}${q.replay?`<button class="replay" id="rp">${SPK}Xem lại hội thoại</button><div id="rpS"></div>`:''}${q.q?`<div class="q">${q.q}</div>`:''}${q.sub?`<p class="sub">${esc(q.sub)}</p>`:''}${q.auto?`<button class="replay" data-say="${esc(q.auto)}">${SPK}Nghe</button>`:''}<div class="opts ${short?'g2':''}">${q.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}</div>`;
+ bindPlay(b);if(q.replay){const u=allU().find(x=>x.id===q.replay);$('#rp').onclick=()=>{const h=$('#rpS');if(!h.firstChild){h.innerHTML=stageHTML(u,{ctrl:1});bindStage(h.firstChild,u,null)}playDialog(u,0,null,h.firstChild)}}
  b.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{if(L.stage!=='q')return;b.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));o.classList.add('sel');L.ans=+o.dataset.i;$('#chk').disabled=false});
  if(q.listen)say(q.listen);else if(q.auto)say(q.auto)},
 type(q,b){b.innerHTML=`<p class="tagl">${esc(q.tag)}</p>${q.listen?listenBtns(q.listen):''}${q.q?`<div class="q">${q.q}</div>`:''}${q.sub?`<p class="sub">${esc(q.sub)}</p>`:''}<input class="search" id="tIn2" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${q.dict?'Gõ câu bạn nghe được…':'Sửa câu ở đây…'}" value="${esc(q.pre||'')}">`;
@@ -1465,8 +1534,8 @@ speak(q,b){b.innerHTML=`<p class="tagl">Đọc to câu sau</p><div class="speakc
  bindPlay(b);const said=$('#said');const set=t=>{L.ans=t;said.textContent=t||'…';said.classList.toggle('has',!!t);$('#chk').disabled=!t.trim()};
  $('#sMic').onclick=()=>{hush();let acc='';micToggle(t=>set((acc+' '+t).trim()),t=>{acc=(acc+' '+t).trim();set(acc)})};
  $('#sIn').oninput=e=>set(e.target.value);$('#skipS').onclick=()=>{micStop();grade(q,{skip:true})}},
-passage(q,b){const d=q.u.d;b.innerHTML=`<p class="tagl">Nghe hội thoại · ${esc(q.u.lv)}</p><h3 class="ptitle">${esc(d.t)}</h3><p class="sub">Nghe kỹ — sau đó trả lời ${(LQ[q.u.id]||[]).length} câu hỏi. Có thể nghe lại khi làm bài.</p><div class="listen"><button class="lbtn" id="pAll" aria-label="Nghe">${SPK}</button><button class="lbtn slow" id="pSlow" aria-label="Nghe chậm">${SLOW}</button></div><button class="hidebtn" id="trT">Hiện lời thoại</button><div class="tr hidden" id="tr">${d.l.map(l=>`<p><b>${esc(d.s[l[0]])}</b>${esc(l[1])}<small>${esc(l[2])}</small></p>`).join('')}</div>`;
- const tr=$('#tr');$('#pAll').onclick=()=>playDialog(q.u,0,tr);$('#pSlow').onclick=()=>playDialog(q.u,.7,tr);$('#trT').onclick=e=>{tr.classList.toggle('hidden');e.target.textContent=tr.classList.contains('hidden')?'Hiện lời thoại':'Ẩn lời thoại'};foot('','Trả lời câu hỏi',true);playDialog(q.u,0,tr)}
+passage(q,b){const d=q.u.d;b.innerHTML=`<p class="tagl">Nghe hội thoại · ${esc(q.u.lv)}</p><h3 class="ptitle">${esc(d.t)}</h3><p class="sub">Xem đoạn hội thoại, rồi trả lời ${(LQ[q.u.id]||[]).length} câu hỏi. Mẹo: lần đầu tắt phụ đề để luyện nghe.</p>${stageHTML(q.u,{ctrl:1})}<button class="hidebtn" id="trT">Hiện lời thoại</button><div class="tr hidden" id="tr">${d.l.map(l=>`<p><b>${esc(d.s[l[0]])}</b>${esc(l[1])}<small>${esc(l[2])}</small></p>`).join('')}</div>`;
+ const tr=$('#tr'),st=b.querySelector('.stagew');bindStage(st,q.u,tr);$('#trT').onclick=e=>{tr.classList.toggle('hidden');e.target.textContent=tr.classList.contains('hidden')?'Hiện lời thoại':'Ẩn lời thoại'};foot('','Trả lời câu hỏi',true);playDialog(q.u,0,tr,st)}
 };
 const C={
 mc(q){const ok=L.ans===q.a;const o=$$('#lbody .opt');o[q.a].classList.add('good');if(!ok&&o[L.ans])o[L.ans].classList.add('wrong');return{ok,html:q.exp||('Đáp án: '+esc(q.opts[q.a]))}},
@@ -1521,7 +1590,7 @@ $('#askF').onsubmit=e=>{e.preventDefault();const v=$('#askIn').value.trim();$('#
 
 /* ---- màn đóng vai / hỏi đáp ---- */
 let T=null;
-function openTalk(title,sub){$('#talk').classList.add('on');document.body.style.overflow='hidden';$('#tTitle').textContent=title;$('#tSub').textContent=sub;$('#tBody').innerHTML='';$('#tIn').value='';$('#tFoot').hidden=false;setHints([])}
+function openTalk(title,sub,u){$('#tStage').innerHTML=u?stageHTML(u,{}):'';$('#talk').classList.add('on');document.body.style.overflow='hidden';$('#tTitle').textContent=title;$('#tSub').textContent=sub;$('#tBody').innerHTML='';$('#tIn').value='';$('#tFoot').hidden=false;setHints([])}
 function closeTalk(){T=null;hush();micStop();$('#talk').classList.remove('on');document.body.style.overflow='';render()}
 $('#tQuit').onclick=closeTalk;
 function addEl(html,cls){const d=document.createElement('div');if(cls)d.className=cls;d.innerHTML=html;$('#tBody').appendChild(d);setTimeout(()=>d.scrollIntoView({block:'end',behavior:'smooth'}),30);return d}
@@ -1530,20 +1599,20 @@ $('#tBody').addEventListener('click',e=>{const s=e.target.closest('[data-say]');
 function setHints(a){const h=$('#tHints');h.innerHTML=a.map(x=>`<div class="hint">${esc(x)}</div>`).join('');h.classList.remove('on');$('#tHint').hidden=!a.length}
 $('#tHint').onclick=()=>$('#tHints').classList.toggle('on');
 function fbk(s,html){addEl(`<div class="pt">${s}<small>điểm</small></div><div>${html}</div>`,'fbk '+(s>=80?'g':s>=60?'m':'b'))}
-function startRole(u){if(!u)return;const d=u.d;let me=d.s.indexOf('Bạn');if(me<0)me=1;T={mode:'role',u,d,me,i:0,sc:[]};openTalk(d.t,(d.s[me]==='Bạn'?'Nói chuyện với '+d.s[1-me]:'Bạn vào vai '+d.s[me])+' · '+u.lv);
+function startRole(u){if(!u)return;const d=u.d;let me=d.s.indexOf('Bạn');if(me<0)me=1;T={mode:'role',u,d,me,i:0,sc:[]};const uu=me===1?u:{id:u.id,d:{t:d.t,s:[d.s[1],d.s[0]],l:d.l.map(l=>[1-l[0],l[1],l[2]])}};T.si=x=>me===1?x:1-x;openTalk(d.t,(d.s[me]==='Bạn'?'Nói chuyện với '+d.s[1-me]:'Bạn vào vai '+d.s[me])+' · '+u.lv,uu);
  addEl(`<div class="bub intro"><h3>${esc(d.t)}</h3><p>Bạn vào vai <b>${esc(d.s[me])}</b>. Nghe ${esc(d.s[1-me])} nói, rồi bấm micro để nói phần của bạn (hoặc gõ). Bấm “Gợi ý” để xem câu mẫu.</p></div>`,'msg sys');roleNext()}
 async function roleNext(){const t=T;if(!t||t.mode!=='role')return;if(t.i>=t.d.l.length)return talkEnd();const l=t.d.l[t.i];
- if(l[0]!==t.me){npc(l[1],l[2],t.d.s[l[0]][0]);await say(l[1],0,1.05);if(T!==t)return;t.i++;roleNext()}
+ if(l[0]!==t.me){npc(l[1],l[2],t.d.s[l[0]][0]);const st=$('#tStage .stage');stageSay(st,t.si(l[0]),l[1],l[2]);await say(l[1],0,1.05);stageIdle(st);if(T!==t)return;t.i++;roleNext()}
  else{t.want=l;setHints(['Câu mẫu: '+l[1]]);addEl(`<div class="bub task">Lượt bạn — hãy nói: “<b>${esc(l[2])}</b>”</div>`,'msg sys')}}
 function talkSend(){const v=$('#tIn').value.trim();if(!v||!T)return;micStop();$('#tIn').value='';if(T.mode==='role'&&T.want)roleAns(v);else if(T.mode==='qa'&&T.q)qaAns(v)}
 $('#tSend').onclick=talkSend;$('#tIn').onkeydown=e=>{if(e.key==='Enter')talkSend()};
 $('#tMic').onclick=()=>{hush();const i=$('#tIn'),base=i.value;let acc=base;micToggle(t=>{i.value=(acc+' '+t).trim()},t=>{acc=(acc+' '+t).trim();i.value=acc})};
-function roleAns(v){const t=T,l=t.want;t.want=null;setHints([]);addEl(`<div class="bub">${esc(v)}</div>`,'msg me');const s=sim(l[1],v);t.sc.push(s);
+function roleAns(v){const t=T,l=t.want;t.want=null;setHints([]);addEl(`<div class="bub">${esc(v)}</div>`,'msg me');{const st=$('#tStage .stage');stageSay(st,1,v,'');setTimeout(()=>stageIdle(st),Math.min(3500,600+v.length*55))}const s=sim(l[1],v);t.sc.push(s);
  fbk(s,`${s>=80?'Rất tốt!':s>=60?'Gần đúng rồi.':'Hãy nghe lại và thử nói theo câu mẫu.'}<div class="cor">${diff(l[1],v)}</div><button class="mini" data-say="${esc(l[1])}">Nghe câu mẫu</button>`);t.i++;setTimeout(()=>{if(T===t)roleNext()},1100)}
-function startQA(){const qs=pick(SQ[S.lv],3);T={mode:'qa',qs,i:0,sc:[]};openTalk('Trả lời câu hỏi','Trình độ '+S.lv+(AI?' · AI chấm bài':''));
+function startQA(){const qs=pick(SQ[S.lv],3);T={mode:'qa',qs,i:0,sc:[]};openTalk('Trả lời câu hỏi','Trình độ '+S.lv+(AI?' · AI chấm bài':''),{id:'qa',qa:1,d:{s:['Ms Taylor','Bạn'],l:[]}});
  addEl(`<div class="bub intro"><h3>Luyện trả lời câu hỏi</h3><p>Giáo viên sẽ hỏi 3 câu ở trình độ ${S.lv}. Trả lời bằng 1–3 câu tiếng Anh (nói hoặc gõ).${AI?' AI sẽ chấm, sửa lỗi và gợi ý câu hay hơn.':' Hiện AI chưa bật nên app chỉ chấm sơ bộ và cho xem câu mẫu.'}</p></div>`,'msg sys');qaNext()}
-function qaNext(){const t=T;if(!t)return;if(t.i>=t.qs.length)return talkEnd();const q=t.qs[t.i];t.q=q;npc(q[0],q[1],'T');say(q[0]);setHints(['Gợi ý trả lời: '+q[2]])}
-async function qaAns(v){const t=T,q=t.q;t.q=null;setHints([]);addEl(`<div class="bub">${esc(v)}</div>`,'msg me');
+function qaNext(){const t=T;if(!t)return;if(t.i>=t.qs.length)return talkEnd();const q=t.qs[t.i];t.q=q;npc(q[0],q[1],'T');{const st=$('#tStage .stage');stageSay(st,0,q[0],q[1]);say(q[0]).then(()=>stageIdle(st))}setHints(['Gợi ý trả lời: '+q[2]])}
+async function qaAns(v){const t=T,q=t.q;t.q=null;setHints([]);addEl(`<div class="bub">${esc(v)}</div>`,'msg me');{const st=$('#tStage .stage');stageSay(st,1,v,'');setTimeout(()=>stageIdle(st),Math.min(3500,600+v.length*55))}
  const fallback=()=>{const n=toks(v).length,s=n<3?35:n<6?60:n<10?72:82;t.sc.push(s);fbk(s,`Chấm sơ bộ theo độ dài và độ đầy đủ.<div class="cor">Câu trả lời mẫu: <b>${esc(q[2])}</b></div><button class="mini" data-say="${esc(q[2])}">Nghe câu mẫu</button>`)};
  if(AI){const w=addEl('<span class="av">T</span><div class="bub dots">Đang chấm…</div>','msg npc');
   try{const r=await askJSON(`You are an English speaking examiner for a Vietnamese learner at CEFR ${S.lv}. Question: "${q[0]}". Learner's answer (from speech-to-text, ignore punctuation and capitalisation): "${v}". Return JSON only: {"score": integer 0-100 judging relevance, grammar and vocabulary for level ${S.lv}, "corrected": "corrected natural version of the learner's answer keeping their ideas", "feedback": "2 short sentences in Vietnamese: one strength and the most important fix", "better": "a stronger model answer of 2 sentences suited to ${S.lv}"}`);
