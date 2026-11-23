@@ -613,6 +613,11 @@ header.top{background:rgba(200,220,244,.85);backdrop-filter:blur(8px);-webkit-ba
 .stagew .actor,.stage:has(.sctl) .actor{bottom:-12%}
 .actor .nm{bottom:calc(12% + 6px)}
 #meSpd{flex-wrap:wrap;overflow:visible}#meSpd .cat{flex:1 1 auto}
+.unode .pring{position:absolute;left:-18px;top:-18px;width:156px;height:156px;transform:rotate(-90deg);pointer-events:none;overflow:visible}
+.pring circle{fill:none;stroke-width:7}
+.pring .pt{stroke:rgba(255,255,255,.55)}
+.pring .pv{stroke:#f5b400;stroke-linecap:round;filter:drop-shadow(0 1px 2px rgba(200,140,0,.45));animation:ringIn .9s ease-out}
+@keyframes ringIn{from{stroke-dasharray:0 100}}
 
 </style>
 </head>
@@ -1479,7 +1484,7 @@ function rLearn(){
  $('#jump').onchange=e=>{const n=$$('#path .ustop')[+e.target.value];if(n)n.scrollIntoView({behavior:'smooth',block:'center'})};
  const xs=[50,70,70,50,30,30];
  $('#path').innerHTML='<svg class="road"></svg>'+us.map((u,ui)=>{const c=PAL[ui%PAL.length],st=[0,1,2].map(n=>S.done[u.id+':'+n]||0),done=st.filter(Boolean).length,kk=u.w.filter(w=>(S.w[K(u,w)]?.b||0)>=2).length;
-  return `<div class="ustop" style="margin-left:${xs[ui%xs.length]}%;transform:translateX(-50%)"><button class="unode" style="--c:${c}" data-u="${esc(u.id)}" aria-label="${S.lv}-${ui+1} ${esc(u.vi)}">${ill(u.vi,c)}${done?`<span class="ust">${'★'.repeat(done)}${'☆'.repeat(3-done)}</span>`:''}</button><div class="ulab">${S.lv}-${ui+1} ${esc(u.vi)}${u.ai?' (AI)':''}<small>${u.w.length} từ · đã thuộc ${kk}</small></div></div>`}).join('');
+  return `<div class="ustop" style="margin-left:${xs[ui%xs.length]}%;transform:translateX(-50%)"><button class="unode" style="--c:${c}" data-u="${esc(u.id)}" aria-label="${S.lv}-${ui+1} ${esc(u.vi)} ${Math.round(done/3*100)}%"><svg class="pring" viewBox="0 0 156 156" aria-hidden="true"><circle cx="78" cy="78" r="74" pathLength="100" class="pt"/>${done?`<circle cx="78" cy="78" r="74" pathLength="100" class="pv" style="stroke-dasharray:${done/3*100} 100"/>`:''}</svg>${ill(u.vi,c)}${done?`<span class="ust">${'★'.repeat(done)}${'☆'.repeat(3-done)}</span>`:''}</button><div class="ulab">${S.lv}-${ui+1} ${esc(u.vi)}${u.ai?' (AI)':''}<small>${u.w.length} từ · đã thuộc ${kk}${done?` · ${done===3?'Hoàn thành':Math.round(done/3*100)+'%'}`:''}</small></div></div>`}).join('');
  $$('#path .unode').forEach(b=>b.onclick=()=>openSheet(allU().find(u=>u.id===b.dataset.u),b.closest('.ustop').querySelector('.ulab').firstChild.textContent));
  requestAnimationFrame(drawRoad);
 }
