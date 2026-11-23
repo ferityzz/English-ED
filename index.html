@@ -1555,9 +1555,9 @@ const qLearn=x=>({k:'learn',w:x.w,wk:x.k});
 const qPass=u=>({k:'passage',u});
 function lqs(u){return (LQ[u.id]||[]).map(([q,o])=>mc(o[0],o.slice(1),{tag:'Nghe hiểu',q:esc(q),replay:u.id,exp:'Đáp án: <b>'+esc(o[0])+'</b>'}))}
 function unitLesson(u,n){if(!u)return;const pool=wordsOf(u.lv),me=u.w.map(w=>({u,w,k:K(u,w)})),id=u.id+':'+n;let qs=[];
- if(n===0){me.forEach((x,i)=>{qs.push(qLearn(x));if(i%2===1)qs.push(qEV(pick(me.slice(0,i+1),1)[0],pool))});pick(me,2).forEach(x=>qs.push(qVE(x,pool)))}
- else if(n===1){const s=shuf(me),g=i=>s[i%s.length],o=x=>x.w[3]?qOrder(x.w[3],x.w[4]):qLis(x,pool);qs=[qEV(g(0),pool),qFill(g(1),pool),qLis(g(2),pool),qVE(g(3),pool),o(g(4)),qFill(g(5),pool),qEV(g(6),pool),qLis(g(7),pool),o(g(8))]}
- else{const s0=shuf(me),s=[0,1,2,3,4,5].map(i=>s0[i%s0.length]),ex=x=>x.w[3]?[x.w[3],x.w[4]]:[x.w[0],x.w[2]];if(u.d&&LQ[u.id])qs.push(qPass(u),...lqs(u));else qs.push(qLis(s[0],pool),qLis(s[1],pool),qLis(s[5],pool));const d=ex(s[2]);qs.push(qDict(d[0],d[1]));[s[3],s[4]].forEach(x=>{const e=ex(x);qs.push(qSpeak(e[0],e[1]))})}
+ if(n===0){me.forEach((x,i)=>{qs.push(qLearn(x));if(i%2===1)qs.push(qEV(pick(me.slice(0,i+1),1)[0],pool))});pick(me,Math.min(6,me.length)).forEach(x=>qs.push(qVE(x,pool)));pick(me,Math.min(4,me.length)).forEach(x=>qs.push(qLis(x,pool)))}
+ else if(n===1){const s=shuf(me),g=i=>s[i%s.length],o=x=>x.w[3]?qOrder(x.w[3],x.w[4]):qLis(x,pool),T=[x=>qEV(x,pool),x=>qFill(x,pool),x=>qLis(x,pool),x=>qVE(x,pool),o,x=>qFill(x,pool)];for(let i=0;i<20;i++)qs.push(T[i%6](g(i)))}
+ else{const s0=shuf(me),s=i=>s0[i%s0.length],ex=x=>x.w[3]?[x.w[3],x.w[4]]:[x.w[0],x.w[2]];if(u.d&&LQ[u.id])qs.push(qPass(u),...lqs(u));else qs.push(qLis(s(0),pool),qLis(s(1),pool),qLis(s(2),pool),qLis(s(3),pool));for(let i=0;i<3;i++){const d=ex(s(4+i));qs.push(qDict(d[0],d[1]))}for(let i=0;i<5;i++){const e=ex(s(7+i));qs.push(qSpeak(e[0],e[1]))}}
  startLesson(u.vi+' · '+NODES[n].t,qs,(st)=>{S.done[id]=Math.max(S.done[id]||0,st);save()})}
 function review(){let ks=Object.keys(S.w).filter(k=>S.w[k].d<=day()).map(findW).filter(Boolean);
  if(!ks.length)ks=wordsOf(S.lv).filter(x=>S.w[x.k]).sort((a,b)=>S.w[a.k].b-S.w[b.k].b).slice(0,10);
