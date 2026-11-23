@@ -1278,7 +1278,10 @@ const syn=window.speechSynthesis;let voices=[];
 function loadV(){try{voices=syn.getVoices()}catch(e){}}
 if(syn){loadV();try{syn.onvoiceschanged=loadV}catch(e){}}
 function voice(){const re=S.acc==='UK'?/en[-_]GB/i:/en[-_]US/i;return voices.find(v=>re.test(v.lang)&&/Google|Natural|Samantha|Daniel|Aria|Jenny|Sonia|Libby|Ava/i.test(v.name))||voices.find(v=>re.test(v.lang))||voices.find(v=>/^en/i.test(v.lang))||null}
-function say(t,rate,pitch){return new Promise(r=>{if(!syn||!t){r();return}let done=false;const fin=()=>{if(!done){done=true;r()}};try{syn.cancel();const u=new SpeechSynthesisUtterance(t);const v=voice();if(v)u.voice=v;u.lang=v?v.lang:(S.acc==='UK'?'en-GB':'en-US');u.rate=rate||(S.slow?.75:.95);u.pitch=pitch||1;u.onend=u.onerror=fin;setTimeout(()=>{try{syn.speak(u)}catch(e){fin()}},40);setTimeout(fin,Math.max(3500,t.length*110/(u.rate)))}catch(e){fin()}})}
+function say(t,rate,pitch){return new Promise(r=>{if(!syn||!t){r();return}let done=false;const fin=()=>{if(!done){done=true;r()}};try{if(syn.speaking||syn.pending)syn.cancel();if(syn.paused)syn.resume();const u=new SpeechSynthesisUtterance(t);const v=voice();if(v)u.voice=v;u.lang=v?v.lang:(S.acc==='UK'?'en-GB':'en-US');u.rate=rate||(S.slow?.75:.95);u.pitch=pitch||1;u.volume=1;u.onend=u.onerror=fin;syn.speak(u);setTimeout(fin,Math.max(3500,t.length*110/(u.rate)))}catch(e){fin()}})}
+/* mở khóa giọng đọc ở lần chạm đầu tiên (iPhone/Android chỉ cho phát khi người dùng chạm) */
+let ttsOK=false;const unlockTTS=()=>{if(ttsOK||!syn)return;ttsOK=true;try{loadV();const u=new SpeechSynthesisUtterance(' ');u.volume=0;syn.speak(u)}catch(e){}};['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,unlockTTS,{capture:true,passive:true}));
+if(!syn)setTimeout(()=>toast('Trình duyệt này không có giọng đọc. Hãy mở bằng Chrome hoặc Safari.'),1500);
 let playTok=0;
 function hush(){playTok++;try{syn&&syn.cancel()}catch(e){}}
 
